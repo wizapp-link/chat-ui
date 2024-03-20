@@ -120,6 +120,11 @@
 				}
 			}, 600);
 		}
+
+		// if (message.from === 'assistant' && isLast && typeof window !== 'undefined' && 'speechSynthesis' in window) {
+		// 	playTTS();
+		// }
+
 	});
 
 	function handleKeyDown(e: KeyboardEvent) {
@@ -127,6 +132,71 @@
 			editFormEl.requestSubmit();
 		}
 	}
+
+	let voicesLoaded = false;
+let isSpeaking = false;
+
+function removeCodeBlocksAndUrls(text: string): string {
+  // Remove code blocks
+  text = text.replace(/```[\s\S]*?```/g, '');
+  
+  // Remove inline code
+  text = text.replace(/`[^`]+`/g, '');
+  
+  // Remove URLs
+  text = text.replace(/(https?:\/\/[^\s]+)/g, '');
+  
+  return text.trim();
+}
+
+function loadVoices(): Promise<void> {
+  return new Promise<void>(resolve => {
+    let timer: NodeJS.Timeout;
+    const intervalId = setInterval(() => {
+      if (window.speechSynthesis.getVoices().length > 0) {
+        voicesLoaded = true;
+        clearInterval(intervalId);
+        clearTimeout(timer);
+        resolve();
+      }
+    }, 100);
+    timer = setTimeout(() => {
+      clearInterval(intervalId);
+      resolve();
+    }, 5000); // Timeout after 5 seconds if voices are not loaded
+  });
+}
+
+function playTTS() {
+  const text = removeCodeBlocksAndUrls(message.content);
+  const utterance = new SpeechSynthesisUtterance(text);
+  
+  // Set the language to English
+  utterance.lang = 'en-US';
+  
+  // Select a specific voice (e.g., the first English voice)
+  const englishVoices = window.speechSynthesis.getVoices().filter(voice => voice.lang === 'en-US');
+  if (englishVoices.length > 0) {
+    utterance.voice = englishVoices[0];
+  }
+  
+  utterance.rate = 1;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+  
+  window.speechSynthesis.speak(utterance);
+  isSpeaking = true;
+  
+  utterance.onend = () => {
+    isSpeaking = false;
+  };
+}
+
+function stopTTS() {
+  window.speechSynthesis.cancel();
+  isSpeaking = false;
+}
+
 
 	$: searchUpdates = (message.updates?.filter(({ type }) => type === "webSearch") ??
 		[]) as WebSearchUpdate[];
@@ -251,6 +321,32 @@
 		{isTapped || isCopied ? 'max-md:visible max-md:translate-y-0 max-md:opacity-100' : ''}
 		"
 			>
+				{#if !loading}
+				<button
+					class="btn rounded-sm p-1 text-sm text-gray-400 focus:ring-0 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300"
+					title="{isSpeaking ? 'Stop TTS' : 'Play TTS'}"
+					type="button"
+					on:click={() => {
+					if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+						if (isSpeaking) {
+						stopTTS();
+						} else {
+						playTTS();
+						}
+					}
+					}}
+				>
+					{#if isSpeaking}
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+						<path fill-rule="evenodd" d="M6 5h12a1 1 0 0 1 0 2H6a1 1 0 1 1 0-2zm0 6h12a1 1 0 0 1 0 2H6a1 1 0 0 1 0-2zm0 6h12a1 1 0 0 1 0 2H6a1 1 0 0 1 0-2z" clip-rule="evenodd" />
+					</svg>
+					{:else}
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-4 w-4">
+						<path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+					</svg>
+					{/if}
+			  </button>
+				{/if}
 				{#if isAuthor}
 					<button
 						class="btn rounded-sm p-1 text-sm text-gray-400 focus:ring-0 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300
