@@ -443,3 +443,19 @@
 		</div>
 	</div>
 </div>
+<div>
+	<h1>TESTING LISTS</h1>
+	{#each messages as msg}
+		{#if msg.from == "user"}
+			<p
+				on:click={() => {
+					var a = document.getElementById(msg.id);
+					console.log(a);
+					a.scrollIntoView();
+				}}
+			>
+				{msg.content}
+			</p>
+		{/if}
+	{/each}
+</div>

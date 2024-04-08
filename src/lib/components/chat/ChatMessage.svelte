@@ -371,6 +371,7 @@ function stopTTS() {
 	<div
 		class="group relative w-full items-start justify-start gap-4 max-sm:text-sm"
 		role="presentation"
+		id={message.id}
 		on:click={() => (isTapped = !isTapped)}
 		on:keydown={() => (isTapped = !isTapped)}
 	>
