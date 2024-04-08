@@ -444,18 +444,16 @@
 	</div>
 </div>
 <div>
-	<h1>TESTING LISTS</h1>
-	{#each messages as msg}
-		{#if msg.from == "user"}
-			<p
-				on:click={() => {
-					var a = document.getElementById(msg.id);
-					console.log(a);
-					a.scrollIntoView();
-				}}
-			>
-				{msg.content}
-			</p>
-		{/if}
-	{/each}
+	<h1>Input History</h1>
+	<ul>
+		{#each messages as msg}
+			{#if msg.from == "user"}
+				<li>
+					<div on:click={() => document.getElementById(msg.id).scrollIntoView()}>
+						{msg.content}
+					</div>
+				</li>
+			{/if}
+		{/each}
+	</ul>
 </div>
