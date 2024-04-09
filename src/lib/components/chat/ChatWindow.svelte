@@ -485,17 +485,16 @@
 				<!-- Input History Section -->
 				<div class="mt-4">
 					<h2 class="mb-2 text-lg font-semibold">Input History</h2>
-					<ul>
-						{#each messages as msg}
-							{#if msg.from == "user"}
-								<li>
-									<div on:click={() => document.getElementById(msg.id).scrollIntoView()}>
-										- {msg.content}
-									</div>
-								</li>
-							{/if}
-						{/each}
-					</ul>
+					{#each messages as msg}
+						{#if msg.from == "user"}
+							<div
+								class="mb-2 rounded bg-zinc-300 pl-2 hover:bg-zinc-200 dark:bg-gray-900"
+								on:click={() => document.getElementById(msg.id).scrollIntoView()}
+							>
+								{msg.content}
+							</div>
+						{/if}
+					{/each}
 				</div>
 			</div>
 		</div>
