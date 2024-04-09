@@ -472,33 +472,36 @@
 			<!-- Sidebar container -->
 			<div class="h-full w-[300px] bg-gray-100 p-4">
 				<!-- Existing sidebar content -->
-				<p>Sidebar Content</p>
-			
+
 				<!-- Knowledge Base Section -->
 				<div class="knowledge-base mt-4">
-					<h2 class="text-lg font-semibold mb-2">Knowledge Base</h2>
-					<textarea class="w-full h-64 p-2 border rounded-md bg-white" placeholder="Type your notes or paste knowledge base content here..."></textarea>
+					<h2 class="mb-2 text-lg font-semibold">Knowledge Base</h2>
+					<textarea
+						class="h-64 w-full rounded-md border bg-white p-2"
+						placeholder="Type your notes or paste knowledge base content here..."
+					/>
+				</div>
+
+				<!-- Input History Section -->
+				<div class="mt-4">
+					<h2 class="mb-2 text-lg font-semibold">Input History</h2>
+					<ul>
+						{#each messages as msg}
+							{#if msg.from == "user"}
+								<li>
+									<div on:click={() => document.getElementById(msg.id).scrollIntoView()}>
+										- {msg.content}
+									</div>
+								</li>
+							{/if}
+						{/each}
+					</ul>
 				</div>
 			</div>
-			
 		</div>
 		<ScrollToBottomBtn
 			class="bottom-36 right-4 max-md:hidden lg:right-10"
 			scrollNode={chatContainer}
 		/>
 	</div>
-</div>
-<div>
-	<h1>Input History</h1>
-	<ul>
-		{#each messages as msg}
-			{#if msg.from == "user"}
-				<li>
-					<div on:click={() => document.getElementById(msg.id).scrollIntoView()}>
-						{msg.content}
-					</div>
-				</li>
-			{/if}
-		{/each}
-	</ul>
 </div>
