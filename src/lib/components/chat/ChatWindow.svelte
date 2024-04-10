@@ -577,7 +577,8 @@
 						{#if msg.from == "user"}
 							<div
 								class="mb-2 rounded bg-zinc-300 pl-2 hover:bg-zinc-200 dark:bg-gray-900"
-								on:click={() => document.getElementById(msg.id).scrollIntoView()}
+								on:click={() =>
+									document.getElementById(msg.id).scrollIntoView({ behavior: "smooth" })}
 							>
 								{msg.content}
 							</div>
