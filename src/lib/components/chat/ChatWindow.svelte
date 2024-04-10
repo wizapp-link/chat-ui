@@ -99,6 +99,15 @@
 			lastMessage.updates?.findIndex((u) => u.type === "status" && u.status === "error") !== -1);
 
 	$: sources = files.map((file) => file2base64(file));
+	// Explicitly subscribe to the page store
+	$: $page, extractConversationId(), fetchKnowledge(conversationId);
+
+	function updateCurrentPageURL() {
+		if (browser) {
+			currentPageURL = window.location.href;
+			console.log("in func updateCurrentPageURL, currentPageUrl = " + currentPageURL)
+		}
+	}
 
 	function onShare() {
 		dispatch("share");
@@ -156,6 +165,83 @@
 	$: if (lastMessage && lastMessage.from === "user") {
 		scrollToBottom();
 	}
+
+	let knowledgeBaseContent = "";
+	let currentPageURL = '';
+	let conversationId = '';
+
+	async function fetchKnowledge(conversationId: string | number | boolean) {
+		if (browser) {
+			if(conversationId === ""){
+				conversationId = "default";
+			}
+			const url = `http://127.0.0.1:8000/knowledge?conversationId=${encodeURIComponent(conversationId)}`;
+			try {
+			const response = await fetch(url, {
+				method: 'GET',
+				headers: {
+					'Accept': 'application/json',
+				},
+			});
+			if (!response.ok) {
+				if(response.status === 404){
+					console.log("No knowledge base content found for this conversation");
+					knowledgeBaseContent = "";
+					return;
+				} else {
+					throw new Error(`HTTP error! status: ${response.status}`);
+				}
+			}
+			const data = await response.json();
+			console.log("Knowledge fetched:", data);
+			// Process your data here
+			knowledgeBaseContent = data.content;
+			} catch (error) {
+				console.error("Error fetching knowledge base content:", error);
+				knowledgeBaseContent = "";
+			}
+		}
+	}
+
+	function extractConversationId() {
+		if (browser) {
+			currentPageURL = window.location.href;
+			const url = new URL(currentPageURL);
+			const pathSegments = url.pathname.split('/').filter(Boolean);
+			// URL structure is like "/conversation/<conversation-id>"
+			const conversationIndex = pathSegments.findIndex(segment => segment === 'conversation');
+			if (conversationIndex !== -1 && pathSegments.length > conversationIndex + 1) {
+				conversationId = pathSegments[conversationIndex + 1];
+				// This will extract the conversation ID or the next part of the URL path
+				console.log("conversationId = " + conversationId);
+			}
+		}
+	}
+
+	async function saveKnowledgeBaseContent() {
+		try {
+			// const rootMessageId = lastMessage && lastMessage.ancestors ? lastMessage.ancestors[0] : (lastMessage ? lastMessage.id : null);
+			if (conversationId ===  ""){
+				conversationId = "default";
+			}
+			const response = await fetch("http://127.0.0.1:8000/knowledge", {
+				method: "POST",
+				headers: {
+				"Content-Type": "application/json",
+				},
+				body: JSON.stringify(
+					{
+						conversationId,
+						content: knowledgeBaseContent
+					}
+				),
+			});
+		const data = await response.json();
+		console.log("Knowledge base content saved:", data);
+		} catch (error) {
+		console.error("Error saving knowledge base content:", error);
+		}
+  	}
 </script>
 
 <div class="relative min-h-0 min-w-0">
@@ -472,15 +558,33 @@
 			<!-- Sidebar container -->
 			<div class="h-full w-[300px] bg-gray-100 p-4">
 				<!-- Existing sidebar content -->
-				<p>Sidebar Content</p>
-			
+
 				<!-- Knowledge Base Section -->
 				<div class="knowledge-base mt-4">
-					<h2 class="text-lg font-semibold mb-2">Knowledge Base</h2>
-					<textarea class="w-full h-64 p-2 border rounded-md bg-white" placeholder="Type your notes or paste knowledge base content here..."></textarea>
+					<h2 class="mb-2 text-lg font-semibold">Knowledge Base</h2>
+					<textarea
+						class="h-64 w-full rounded-md border bg-white p-2"
+						placeholder="Type your notes or paste knowledge base content here..."
+						bind:value={knowledgeBaseContent}
+						on:input={saveKnowledgeBaseContent}
+					></textarea>
+				</div>
+
+				<!-- Input History Section -->
+				<div class="mt-4">
+					<h2 class="mb-2 text-lg font-semibold">Input History</h2>
+					{#each messages as msg}
+						{#if msg.from == "user"}
+							<div
+								class="mb-2 rounded bg-zinc-300 pl-2 hover:bg-zinc-200 dark:bg-gray-900"
+								on:click={() => document.getElementById(msg.id).scrollIntoView()}
+							>
+								{msg.content}
+							</div>
+						{/if}
+					{/each}
 				</div>
 			</div>
-			
 		</div>
 		<ScrollToBottomBtn
 			class="bottom-36 right-4 max-md:hidden lg:right-10"
