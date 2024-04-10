@@ -8,6 +8,7 @@
 	import CarbonClose from "~icons/carbon/close";
 	import CarbonCheckmark from "~icons/carbon/checkmark";
 	import CarbonCaretDown from "~icons/carbon/caret-down";
+	import CarbonDocumentAttachment from "~icons/carbon/document-attachment";
 
 	import EosIconsLoading from "~icons/eos-icons/loading";
 
@@ -242,6 +243,44 @@
 		console.error("Error saving knowledge base content:", error);
 		}
   	}
+
+	let fileInput: HTMLInputElement;
+
+	function triggerFileUpload() {
+		if (fileInput) {
+			fileInput.click();
+		}
+	}
+
+	async function handleFileChange(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (!input.files?.length) return;
+		const file = input.files[0];
+		if (!file) {
+			return;
+		}
+
+		const formData = new FormData();
+		formData.append('file', file);
+
+		try {
+			const response = await fetch('http://127.0.0.1:8000/upload-file/', {
+				method: 'POST',
+				body: formData,
+			});
+
+			const result = await response.json();
+
+			if (response.ok) {
+				alert(result.message); // You can replace this with a more sophisticated toast/notification system
+			} else {
+				throw new Error(result.message);
+			}
+		} catch (error) {
+			alert(`Upload failed: ${(error as Error).message}`);
+		}
+	}
+
 </script>
 
 <div class="relative min-h-0 min-w-0">
@@ -505,6 +544,15 @@
 												</g>
 											</svg>
 										</div>
+										<button
+											class="btn mx-1 my-1 h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40"
+											type="button"
+											on:click={triggerFileUpload}
+											title="Upload File"
+										>
+											<CarbonDocumentAttachment class="text-grey-500" />
+										</button>
+										<input type="file" bind:this={fileInput} on:change={handleFileChange} class="hidden" />					
 										<button
 											class="btn mx-1 my-1 h-[2.4rem] self-end rounded-lg bg-transparent p-1 px-[0.7rem] text-gray-400 enabled:hover:text-gray-700 disabled:opacity-60 enabled:dark:hover:text-gray-100 dark:disabled:opacity-40"
 											disabled={!message || isReadOnly}
